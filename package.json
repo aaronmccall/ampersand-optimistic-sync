@@ -1,5 +1,5 @@
 {
-  "name": "anachronisync",
+  "name": "ampersand-optimistic-sync",
   "version": "0.2.0",
   "description": "A sync wrapper for Backbone.sync and ampersand-sync that groks last-modified and if-unmodified since",
   "main": "index.js",
