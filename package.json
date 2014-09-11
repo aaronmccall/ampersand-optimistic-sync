@@ -1,0 +1,38 @@
+{
+  "name": "anachronisync",
+  "version": "0.0.0",
+  "description": "A sync wrapper for Backbone.sync and ampersand-sync that groks last-modified and if-unmodified since",
+  "main": "index.js",
+  "scripts": {
+    "test": "lab -v",
+    "test-cov": "lab -r html > coverage.html",
+    "build": "browserify -o anachronisync.js index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aaronmccall/anachronisync.git"
+  },
+  "keywords": [
+    "sync",
+    "REST",
+    "last-modified",
+    "if-unmodified-since",
+    "ampersandjs",
+    "backbone"
+  ],
+  "author": "Aaron McCall <aaron@andyet.net>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/aaronmccall/anachronisync/issues"
+  },
+  "homepage": "https://github.com/aaronmccall/anachronisync",
+  "devDependencies": {
+    "chai": "~1.9.1",
+    "sinon": "~1.10.3",
+    "mocha": "~1.21.4",
+    "ampersand-model": "~4.0.2",
+    "blanket": "~1.1.6",
+    "lab": "~4.3.0",
+    "backbone": "~1.1.2"
+  }
+}
