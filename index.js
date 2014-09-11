@@ -1,5 +1,12 @@
+var config;
+
+var updateHeaderMap = {
+    'etag': 'if-match',
+    'last-modified': 'if-unmodified-since'
+};
+
 function handleOutOfSync(model, xhr) {
-    var lastModified = xhr.getResponseHeader('last-modified');
+    var version = xhr.getResponseHeader(config.type);
     var mime = xhr.getResponseHeader('content-type');
     var data;
     if (mime.indexOf('json') !== -1) {
@@ -7,7 +14,7 @@ function handleOutOfSync(model, xhr) {
             data = JSON.parse(xhr.responseText);    
         } catch (e) {}
     }
-    model.trigger('sync:invalid-last-modified', model, lastModified, data || {});
+    model.trigger('sync:invalid-version', model, version, data || {});
 }
 
 function setupOptions(method, model, options) {
@@ -20,31 +27,38 @@ function setupOptions(method, model, options) {
     };
     var success = options.success;
     options.success = function (data, status, xhr) {
-        var lastModified = xhr.getResponseHeader('last-modified');
-        if (lastModified) {
-            model._lastModified = lastModified;
+        var version = xhr.getResponseHeader(config.type);
+        if (version) {
+            model._version = version;
             if (data && typeof data === 'object') {
                 model._serverState = data;
             }
-            model.trigger('sync:last-modified', model, lastModified);
+            model.trigger('sync:version', model, version);
         }
         if (success) success(data, status, xhr);
     };
 }
 
-module.exports = function (base) {
+module.exports = function (base, _config) {
+    config = _config || {};
+    if (!config.type) config.type = 'etag';
+    if (config.type !== 'etag' && config.type !== 'last-modified') {
+        throw new Error('Allowed types are "etag" and "last-modified"');
+    }
     var base_sync = (base.prototype && base.prototype.sync) ? base.prototype.sync : base.sync;
-    if (!base_sync) throw new Error('Anachronisync requires an existing sync implementation to wrap.');
+    if (!base_sync) throw new Error('optimistic-sync requires an existing sync implementation to wrap.');
 
     return {
         sync: function (method, model, options) {
             if (!options) options = {};
             setupOptions(method, model, options);
-            if ((method === 'update' || method === 'patch') && model._lastModified){
+            if ((method === 'update' || method === 'patch') && model._version){
                 if (!options.headers) options.headers = {};
-                options.headers['if-unmodified-since'] = model._lastModified;
+                options.headers[updateHeaderMap[config.type]] = model._version;
             }
             return base_sync.call(this, method, model, options);
         }
     };
 };
+
+module.exports.headers = updateHeaderMap;
