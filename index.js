@@ -14,7 +14,7 @@ function handleOutOfSync(model, xhr) {
             data = JSON.parse(xhr.responseText);    
         } catch (e) {}
     }
-    model.trigger('sync:invalid-version', model, version, data || {});
+    model.trigger('sync:invalid-version', model, version, data);
 }
 
 function setupOptions(method, model, options) {
