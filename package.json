@@ -1,16 +1,15 @@
 {
   "name": "ampersand-optimistic-sync",
   "version": "0.3.0",
-  "description": "A sync wrapper for Backbone.sync and ampersand-sync that groks last-modified and if-unmodified since",
+  "description": "A sync wrapper for Backbone.sync and ampersand-sync that implements optimistic concurrency in HTTP.",
   "main": "index.js",
   "scripts": {
     "test": "lab -v",
-    "test-cov": "lab -r html > coverage.html",
-    "build": "browserify -o anachronisync.js index.js"
+    "test-cov": "lab -r html > coverage.html"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/aaronmccall/anachronisync.git"
+    "url": "https://github.com/aaronmccall/ampersand-optimistic-sync.git"
   },
   "keywords": [
     "sync",
@@ -23,9 +22,9 @@
   "author": "Aaron McCall <aaron@andyet.net>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/aaronmccall/anachronisync/issues"
+    "url": "https://github.com/aaronmccall/ampersand-optimistic-sync/issues"
   },
-  "homepage": "https://github.com/aaronmccall/anachronisync",
+  "homepage": "https://github.com/aaronmccall/ampersand-optimistic-sync",
   "devDependencies": {
     "chai": "~1.9.1",
     "sinon": "~1.10.3",
