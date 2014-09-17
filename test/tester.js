@@ -3,7 +3,7 @@ var sinon = require('sinon');
 // Test tooling
 var Lab = require('lab');
 var expect = Lab.expect;
-var xhrStub = require('../lib/xhr-stub');
+var xhrStub = require('./xhr-stub');
 
 // System under test
 var syncMixin = require('../');
@@ -23,9 +23,12 @@ module.exports = function (name, BaseModel, config) {
         };
     }
 
-    describe('***** anachronisync + ' + name + ' + ' + type + ' *****', function () {
-        it('throws when the mixin is called on a model with now sync method', wrapDone(function () {
+    describe('***** ampersand-optimistic-sync + ' + name + ' + ' + type + ' *****', function () {
+        it('throws when the mixin is called on a model with no sync method', wrapDone(function () {
             expect(syncMixin.bind(null, {})).to.throw(Error, /existing sync/);
+        }));
+        it('throws when the mixin is called with an invalid type', wrapDone(function () {
+            expect(syncMixin.bind(null, BaseModel, {type: 'retrograde-inversion'})).to.throw(Error, /Allowed types/);
         }));
         describe('wraps and/or ensures success handlers', function () {
             var instance, sync;
@@ -66,7 +69,6 @@ module.exports = function (name, BaseModel, config) {
                 it('sets a _version property on model', function (done) {
                     instance.sync('read', instance, {
                         success: function (data, status, _xhr) {
-                            console.log('xhrProps:', xhrProps);
                             expect(data).to.eql(JSON.parse(xhr.responseText));
                             expect(status).to.equal('ok');
                             expect(_xhr).to.equal(xhr);
@@ -159,6 +161,41 @@ module.exports = function (name, BaseModel, config) {
                     expect(callback.firstCall.args[2]).to.eql(JSON.parse(xhrProps.responseText));
                     done();
                 }});
+            });
+        });
+
+        describe('when config.invalidHandler is specified', function () {
+            var sync, instance, xhr, callback;
+            var oldLastModified = 'foo-bar-baz';
+            var xhrProps = { 
+                headers: { 
+                    'content-type': 'application/json'
+                },
+                status: 412,
+                responseText: '{"foo": "bar"}' };
+            xhrProps.headers[type] = 'bar-baz-biz';
+            beforeEach(wrapDone(function () {
+                sync = sinon.stub(BaseModel.prototype, 'sync');
+                xhr = xhrStub(xhrProps);
+                callback = sinon.spy();
+                instance = new (BaseModel.extend(syncMixin(BaseModel.prototype, {type: type, invalidHandler: callback})))();
+            }));
+            afterEach(wrapDone(function () {
+                BaseModel.prototype.sync = originalSync;
+            }));
+            it('registers invalidHandler for sync:invalid-version events on first update/patch', function (done) {
+                sync.yieldsTo('success', JSON.parse(xhr.responseText), 'ok', xhr);
+                instance.sync('read', instance, {
+                    success: function () {
+                        expect(instance._events ? instance._events['sync:invalid-version'] : instance._events).to.not.exist;
+                        sync.yieldsToAsync('error', xhr, 'error', xhr.responseText);
+                        instance.sync('update', instance, {error: function () {
+                            expect(callback.called).to.equal(true);
+                            done();
+                        }});
+                        expect(instance._events['sync:invalid-version']).to.exist;
+                    }
+                });
             });
         });
     });

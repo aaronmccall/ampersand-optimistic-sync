@@ -1,4 +1,4 @@
 var BackboneModel = require('backbone').Model;
-var tester = require('../lib/tester');
+var tester = require('./tester');
 
 exports.lab = tester('Backbone.Model', BackboneModel, {type: 'last-modified'});
