@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "lab -v",
-    "test-cov": "lab -r html > coverage.html"
+    "test-cov": "lab -r html -o coverage.html"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/aaronmccall/ampersand-optimistic-sync.git"
   },
   "keywords": [
+    "optimistic concurrency",
     "sync",
     "REST",
     "last-modified",
@@ -26,12 +27,9 @@
   },
   "homepage": "https://github.com/aaronmccall/ampersand-optimistic-sync",
   "devDependencies": {
-    "chai": "~1.9.1",
+    "lab": "~4.4.3",
     "sinon": "~1.10.3",
-    "mocha": "~1.21.4",
     "ampersand-model": "~4.0.2",
-    "blanket": "~1.1.6",
-    "lab": "~4.3.0",
     "backbone": "~1.1.2"
   }
 }
