@@ -55,6 +55,10 @@ module.exports = function (base, _config) {
             if (!options) options = {};
             setupOptions(method, model, options);
             if ((method === 'update' || method === 'patch') && model._version){
+                if (typeof config.invalidHandler === 'function' && !this._syncInvalidListening) {
+                    this.listenTo(this, 'sync:invalid-version', config.invalidHandler);
+                    this._syncInvalidListening = true;
+                }
                 if (!options.headers) options.headers = {};
                 options.headers[updateHeaderMap[config.type]] = model._version;
             }
