@@ -18,13 +18,15 @@ function handleOutOfSync(model, xhr) {
 }
 
 function setupOptions(method, model, options) {
-    var error = options.error;
-    options.error = function (xhr, status, message) {
-        if (xhr.status === 412) {
-            handleOutOfSync(model, xhr);
-        }
-        if (typeof error === 'function') error(xhr, status, message);
-    };
+    if (method === 'update' || method === 'patch') {
+        var error = options.error;
+        options.error = function (xhr, status, message) {
+            if (xhr.status === 412) {
+                handleOutOfSync(model, xhr);
+            }
+            if (typeof error === 'function') error(xhr, status, message);
+        };
+    }
     var success = options.success;
     options.success = function (data, status, xhr) {
         var version = xhr.getResponseHeader(config.type);
