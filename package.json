@@ -17,7 +17,9 @@
     "REST",
     "last-modified",
     "if-unmodified-since",
-    "ampersandjs",
+    "etag",
+    "if-match",
+    "ampersand",
     "backbone"
   ],
   "author": "Aaron McCall <aaron@andyet.net>",

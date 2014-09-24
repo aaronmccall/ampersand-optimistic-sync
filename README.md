@@ -27,7 +27,7 @@ On updates, sync will now automatically include the _version value as an If-Matc
 
 If the update is successful, the new ETag that the server sends will be set as _version.
 
-If the update request returns a 412 error, a sync:invalid-version (args: model, version, data);
+If the update request returns a 412 error, a `sync:invalid-version (args: model, version, data)` event is fired.
 
 ### Customizing Behavior
 
@@ -52,6 +52,6 @@ The model will now store Last-Modified header values as _version and send _versi
 
 #### config.invalidHandler
 
-If config.invalidHandler is a function, it will be registered as a sync:invalid-version handler before your first update request is sent.
+If config.invalidHandler is a function, it will be registered as a `sync:invalid-version` handler before your first update request is sent.
 
 [1]: http://looselyconnected.wordpress.com/2010/03/25/the-http-etag-header-and-optimistic-locking-in-rest/ (The HTTP ETag header and optimistic locking in REST)
