@@ -1,3 +1,5 @@
+var kisslog = require('kisslog');
+
 var updateHeaderMap = {
     'etag': 'if-match',
     'last-modified': 'if-unmodified-since'
@@ -5,9 +7,7 @@ var updateHeaderMap = {
 
 module.exports = function (base, _config) {
     var config = _config || {};
-    function log() {
-        if (config.debug) console.log.apply(console, arguments);
-    }
+    var log = kisslog(config);
     if (!config.type) config.type = 'etag';
     if (config.type !== 'etag' && config.type !== 'last-modified') {
         throw new Error('Allowed types are "etag" and "last-modified"');
