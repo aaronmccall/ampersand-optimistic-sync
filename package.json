@@ -1,6 +1,6 @@
 {
   "name": "ampersand-optimistic-sync",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A sync wrapper for Backbone.sync and ampersand-sync that implements optimistic concurrency in HTTP.",
   "main": "index.js",
   "scripts": {
