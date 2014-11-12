@@ -31,6 +31,19 @@ module.exports = function (base, _config) {
 
     function setupOptions(method, model, options) {
         log('optimistic-sync setting up options');
+        var key;
+        if (config.options) {
+            if (typeof config.options.all === 'object') {
+                for (key in config.options.all) {
+                    options[key] = config.options.all[key];
+                }
+            }
+            if (typeof config.options[method] === 'object') {
+                for (key in config.options[method]) {
+                    options[key] = config.options[method][key];
+                }
+            }
+        }
         if (method === 'update' || method === 'patch') {
             var error = options.error;
             options.error = function (xhr, status, message) {
@@ -52,19 +65,6 @@ module.exports = function (base, _config) {
             }
             if (success) success(data, status, xhr);
         };
-        var key;
-        if (config.options) {
-            if (typeof config.options.all === 'object') {
-                for (key in config.options.all) {
-                    options[key] = config.options.all[key];
-                }
-            }
-            if (typeof config.options[method] === 'object') {
-                for (key in config.options[method]) {
-                    options[key] = config.options[method][key];
-                }
-            }
-        }
     }   
 
     return {
