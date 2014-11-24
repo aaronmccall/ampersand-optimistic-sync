@@ -6,6 +6,14 @@ var Lab = require('lab');
 var expect = Code.expect;
 var xhrStub = require('./xhr-stub');
 
+function deepProp(obj, propArray) {
+    var prop = obj;
+    while ((prop = prop[propArray.shift()]) != null) {
+
+    }
+    return prop;
+}
+
 // System under test
 var syncMixin = require('../');
 
@@ -53,6 +61,52 @@ module.exports = function (name, BaseModel, config) {
                 }
                 done();
             });
+        });
+        describe('handles headers set as default and passed at call time', function () {
+            var instance, sync;
+            beforeEach(wrapDone(function () {
+                sync = sinon.stub(BaseModel.prototype, 'sync');
+                instance = new (BaseModel.extend(syncMixin(BaseModel, config)))();
+            }));
+            afterEach(wrapDone(function () {
+                BaseModel.prototype.sync = originalSync;
+            }));
+            it('uses ajaxConfig.headers when no headers passed at call time or via own config', wrapDone(function () {
+                instance.sync('read', instance, {});
+                var args = sync.getCall(0).args;
+                expect(args[2]).to.be.an.object();
+                expect(args[2].headers).to.exist();
+                if (typeof instance.ajaxConfig === 'object' && typeof instance.ajaxConfig.headers === 'object') {
+                    expect(args[2].headers).to.equal(instance.ajaxConfig.headers);
+                }
+                if (typeof instance.ajaxConfig === 'function') {
+                    console.log('instance.ajaxConfig was a function');
+                    expect(args[2].headers).to.include(instance.ajaxConfig().headers);
+                }
+            }));
+            it('uses config.headers', wrapDone(function () {
+                instance.sync('read', instance, {});
+                var args = sync.getCall(0).args;
+                expect(args[2]).to.be.an.object();
+                expect(args[2].headers).to.exist();
+                var headers;
+                if (config && ((headers = deepProp(config, ['options', 'all', 'headers'])) != null)) {
+                    expect(args[2].headers).to.include(headers);
+                }
+                if (config && ((headers = deepProp(config, ['options', 'read', 'headers'])) != null)) {
+                    expect(args[2].headers).to.include(headers);
+                }
+            }));
+            it('uses options.headers when passed at call time', wrapDone(function () {
+                var options = {
+                    headers: { test: 'bar' }
+                };
+                instance.sync('read', instance, options);
+                var args = sync.getCall(0).args;
+                expect(args[2]).to.be.an.object();
+                expect(args[2].headers).to.exist();
+                expect(args[2].headers).to.equal(options.headers);
+            }));
         });
         describe('adds version handling', function () {
             describe('when ' + type + ' header is present', function () {

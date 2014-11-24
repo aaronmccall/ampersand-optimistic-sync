@@ -16,6 +16,20 @@ module.exports = function (base, _config) {
     if (!base_sync) throw new Error('optimistic-sync requires an existing sync implementation to wrap.');
     log('optimistic-sync config:', config);
 
+
+    function getDefaultHeaders(model, options) {
+        log('getDefaultHeaders');
+        if (options.headers) return options.headers;
+        var ajaxConfig;
+        if (typeof model.ajaxConfig === 'function') {
+            ajaxConfig = model.ajaxConfig();
+        }
+        if (typeof model.ajaxConfig === 'object') {
+            ajaxConfig = model.ajaxConfig;
+        }
+        return (ajaxConfig && ajaxConfig.headers) || {};
+    }
+
     function handleOutOfSync(model, xhr) {
         log('optimistic-sync handling invalid-version');
         var version = xhr.getResponseHeader(config.type);
@@ -30,6 +44,7 @@ module.exports = function (base, _config) {
     }
 
     function setupOptions(method, model, options) {
+        if (!options) options = {};
         log('optimistic-sync setting up options');
         var key;
         if (config.options) {
@@ -44,6 +59,7 @@ module.exports = function (base, _config) {
                 }
             }
         }
+        options.headers = getDefaultHeaders(model, options);
         if (method === 'update' || method === 'patch') {
             var error = options.error;
             options.error = function (xhr, status, message) {
@@ -65,21 +81,20 @@ module.exports = function (base, _config) {
             }
             if (success) success(data, status, xhr);
         };
+        return options;
     }   
 
     return {
         _optimisticSync: config,
         sync: function (method, model, options) {
             log('optimistic-sync sync called');
-            if (!options) options = {};
-            setupOptions(method, model, options);
+            options = setupOptions(method, model, options);
             if ((method === 'update' || method === 'patch') && model._version) {
                 if (typeof config.invalidHandler === 'function' && !this._syncInvalidListening) {
                     log('optimistic-sync listening to sync:invalid-version with configured handler');
                     this.listenTo(this, 'sync:invalid-version', config.invalidHandler);
                     this._syncInvalidListening = true;
                 }
-                if (!options.headers) options.headers = {};
                 options.headers[updateHeaderMap[config.type]] = model._version;
             }
             return base_sync.call(this, method, model, options);
