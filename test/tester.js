@@ -1,8 +1,9 @@
 /*jshint expr:true*/
 var sinon = require('sinon');
 // Test tooling
+var Code = require('code');
 var Lab = require('lab');
-var expect = Lab.expect;
+var expect = Code.expect;
 var xhrStub = require('./xhr-stub');
 
 // System under test
@@ -45,9 +46,10 @@ module.exports = function (name, BaseModel, config) {
                 expect(sync.calledTwice).to.equal(true);
                 for (var i = 0, c = sync.callCount; i < c; i++) {
                     var args = sync.getCall(i).args;
-                    expect(args).to.be.an('array').with.length(3);
-                    expect(args[2]).to.be.an('object');
-                    expect(args[2]).to.have.property('success').that.is.a('function');
+                    expect(args).to.be.an.array();
+                    expect(args.length).to.equal(3);
+                    expect(args[2]).to.be.an.object();
+                    expect(args[2].success).to.be.a.function();
                 }
                 done();
             });
@@ -69,7 +71,7 @@ module.exports = function (name, BaseModel, config) {
                 it('sets a _version property on model', function (done) {
                     instance.sync('read', instance, {
                         success: function (data, status, _xhr) {
-                            expect(data).to.eql(JSON.parse(xhr.responseText));
+                            expect(data).to.deep.equal(JSON.parse(xhr.responseText));
                             expect(status).to.equal('ok');
                             expect(_xhr).to.equal(xhr);
                             expect(instance._version).to.equal(xhrProps.headers[type]);
@@ -88,7 +90,7 @@ module.exports = function (name, BaseModel, config) {
                 });
                 it('sets a _serverState property on model', function (done) {
                     instance.sync('read', instance);
-                    expect(instance._serverState).to.eql(JSON.parse(xhr.responseText));
+                    expect(instance._serverState).to.deep.equal(JSON.parse(xhr.responseText));
                     done();
                 });
             });
@@ -116,7 +118,7 @@ module.exports = function (name, BaseModel, config) {
                     sync.yieldsTo('error', xhr, 'error', xhr.responseText);
                     instance._version = 'foo-bar-baz';
                     instance.sync('update', instance, options);
-                    expect(options.error).to.be.a('function');
+                    expect(options.error).to.be.a.function();
                     done();
                 });
             });
@@ -158,7 +160,7 @@ module.exports = function (name, BaseModel, config) {
             });
             it('and the response data, if supplied', function (done) {
                 instance.sync('update', instance, {error: function (xhr) {
-                    expect(callback.firstCall.args[2]).to.eql(JSON.parse(xhrProps.responseText));
+                    expect(callback.firstCall.args[2]).to.deep.equal(JSON.parse(xhrProps.responseText));
                     done();
                 }});
             });

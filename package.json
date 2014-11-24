@@ -29,10 +29,11 @@
   },
   "homepage": "https://github.com/aaronmccall/ampersand-optimistic-sync",
   "devDependencies": {
-    "lab": "~4.4.3",
+    "lab": "~5.0.2",
     "sinon": "~1.10.3",
     "ampersand-model": "~4.0.2",
-    "backbone": "~1.1.2"
+    "backbone": "~1.1.2",
+    "code": "~1.2.1"
   },
   "dependencies": {
     "kisslog": "^2.0.0"
