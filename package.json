@@ -31,14 +31,11 @@
   "devDependencies": {
     "ampersand-model": "^6.0.1",
     "backbone": "^1.2.2",
-    "code": "~1.2.1",
-    "lab": "~5.0.2",
-    "sinon": "~1.10.3"
-  },
-  "dependencies": {
     "code": "^1.5.0",
-    "kisslog": "^2.0.0",
     "lab": "^5.15.2",
     "sinon": "^1.16.1"
+  },
+  "dependencies": {
+    "kisslog": "^2.0.0"
   }
 }
