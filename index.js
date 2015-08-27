@@ -30,15 +30,18 @@ module.exports = function (base, _config) {
         return (ajaxConfig && ajaxConfig.headers) || {};
     }
 
-    function handleOutOfSync(model, xhr) {
+    function handleOutOfSync(model, response) {
         log('optimistic-sync handling invalid-version');
+        var xhr = response.rawRequest || response;
         var version = xhr.getResponseHeader(config.type);
         var mime = xhr.getResponseHeader('content-type');
         var data;
         if (mime.indexOf('json') !== -1) {
             try {
-                data = JSON.parse(xhr.responseText);    
-            } catch (e) {}
+                data = response.body || JSON.parse(xhr.responseText);    
+            } catch (e) {
+                data = xhr.responseText;
+            }
         }
         model.trigger('sync:invalid-version', model, version, data);
     }
@@ -62,15 +65,17 @@ module.exports = function (base, _config) {
         options.headers = getDefaultHeaders(model, options);
         if (method === 'update' || method === 'patch') {
             var error = options.error;
-            options.error = function (xhr, status, message) {
+            options.error = function (response, status, message) {
+                var xhr = response.rawRequest ? response.rawRequest : response;
                 if (xhr.status === 412) {
-                    handleOutOfSync(model, xhr);
+                    handleOutOfSync(model, response);
                 }
-                if (typeof error === 'function') error(xhr, status, message);
+                if (typeof error === 'function') error(response, status, message);
             };
         }
         var success = options.success;
-        options.success = function (data, status, xhr) {
+        options.success = function (data, status, response) {
+            var xhr = response.rawRequest ? response.rawRequest : response;
             var version = xhr.getResponseHeader(config.type);
             if (version) {
                 model._version = version;
@@ -79,7 +84,7 @@ module.exports = function (base, _config) {
                 }
                 model.trigger('sync:version', model, version);
             }
-            if (success) success(data, status, xhr);
+            if (success) success(data, status, response);
         };
         return options;
     }   

@@ -6,7 +6,7 @@ var xhr = {
     responseText: '{"foo": "baz"}'
 };
 
-module.exports = function (props) {
+module.exports = function (props, xhr2) {
     var payload = { };
     var key;
     props = props || {};
@@ -15,7 +15,6 @@ module.exports = function (props) {
         payload.headers = {};
         for (key in props.headers) {
             payload.getResponseHeader.withArgs(key).returns(props.headers[key]);
-            payload.headers[key] = props[key];
         }
     }
     for (key in props) {
@@ -23,6 +22,21 @@ module.exports = function (props) {
     }
     for (key in xhr) {
         if (!payload[key]) payload[key] = xhr[key];
+    }
+    if (xhr2) {
+        var newPayload =  {
+            statusCode: payload.status,
+            method: 'GET',
+            headers: payload.headers || {},
+            url: props.url || '',
+            rawRequest: payload
+        };
+        try {
+            newPayload.body = JSON.parse(payload.responseText);
+        } catch (e) {
+            newPayload.body = payload.responseText;
+        }
+        return newPayload;
     }
     return payload;
 };

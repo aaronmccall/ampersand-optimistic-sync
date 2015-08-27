@@ -6,14 +6,37 @@ var Lab = require('lab');
 var expect = Code.expect;
 var xhrStub = require('./xhr-stub');
 
-function deepProp(obj, propArray) {
-    var prop = obj;
-    while ((prop = prop[propArray.shift()]) != null) {
-
+function deepProp(obj, path) {
+    if (obj == null) return obj;
+    var propArray;
+    if (typeof path === 'string') {
+        propArray = path.split(/[\.,\/:]/);
+    } else {
+        propArray = path;
     }
+    if (!propArray || !propArray.length) return obj;
+    var prop = obj;
+    while ((prop = prop[propArray.shift()]) != null) continue;
     return prop;
 }
 
+function jsonData(xhr) {
+    return xhr.body || safeParse(xhr);
+}
+
+function safeParse(xhr) {
+    var response;
+    try {
+        response = JSON.parse(xhr.responseText || '');
+    } catch (e) {
+        response = xhr.responseText;
+    }
+    return response;
+}
+
+function getResponseText(xhr) {
+    return deepProp(xhr, ['rawRequest', 'responseText']) || xhr.responseText;
+}
 // System under test
 var syncMixin = require('../');
 
@@ -33,6 +56,7 @@ module.exports = function (name, BaseModel, config) {
     }
 
     describe('***** ampersand-optimistic-sync + ' + name + ' + ' + type + ' *****', function () {
+        var isAmp = name.indexOf('ampersand') > -1;
         it('throws when the mixin is called on a model with no sync method', wrapDone(function () {
             expect(syncMixin.bind(null, {})).to.throw(Error, /existing sync/);
         }));
@@ -115,8 +139,8 @@ module.exports = function (name, BaseModel, config) {
                 xhrProps.headers[type] = 'foo-bar-baz';
                 beforeEach(wrapDone(function () {
                     sync = sinon.stub(BaseModel.prototype, 'sync');
-                    xhr = xhrStub(xhrProps);
-                    sync.yieldsTo('success', JSON.parse(xhr.responseText), 'ok', xhr);
+                    xhr = xhrStub(xhrProps, isAmp);
+                    sync.yieldsTo('success', jsonData(xhr), 'ok', xhr);
                     instance = new (BaseModel.extend(syncMixin(BaseModel, config)))();
                 }));
                 afterEach(wrapDone(function () {
@@ -125,7 +149,7 @@ module.exports = function (name, BaseModel, config) {
                 it('sets a _version property on model', function (done) {
                     instance.sync('read', instance, {
                         success: function (data, status, _xhr) {
-                            expect(data).to.deep.equal(JSON.parse(xhr.responseText));
+                            expect(data).to.deep.equal(jsonData(xhr));
                             expect(status).to.equal('ok');
                             expect(_xhr).to.equal(xhr);
                             expect(instance._version).to.equal(xhrProps.headers[type]);
@@ -144,7 +168,7 @@ module.exports = function (name, BaseModel, config) {
                 });
                 it('sets a _serverState property on model', function (done) {
                     instance.sync('read', instance);
-                    expect(instance._serverState).to.deep.equal(JSON.parse(xhr.responseText));
+                    expect(instance._serverState).to.deep.equal(jsonData(xhr));
                     done();
                 });
             });
@@ -153,7 +177,7 @@ module.exports = function (name, BaseModel, config) {
                 beforeEach(wrapDone(function () {
                     sync = sinon.stub(BaseModel.prototype, 'sync');
                     xhr = xhrStub();
-                    sync.yieldsTo('success', JSON.parse(xhr.responseText), 'ok', xhr);
+                    sync.yieldsTo('success', jsonData(xhr), 'ok', xhr);
                     instance = new (BaseModel.extend(syncMixin(BaseModel.prototype, config)))();
                 }));
                 afterEach(wrapDone(function () {
@@ -186,11 +210,11 @@ module.exports = function (name, BaseModel, config) {
                     'content-type': 'application/json'
                 },
                 status: 412,
-                responseText: '{"foo": "bar"}' };
+                responseText: 'foo' };
             xhrProps.headers[type] = 'bar-baz-biz';
             beforeEach(wrapDone(function () {
                 sync = sinon.stub(BaseModel.prototype, 'sync');
-                xhr = xhrStub(xhrProps);
+                xhr = xhrStub(xhrProps, isAmp);
                 sync.yieldsTo('error', xhr, 'error', xhr.responseText);
                 instance = new (BaseModel.extend(syncMixin(BaseModel.prototype, config)))();
                 callback = sinon.spy();
@@ -206,7 +230,7 @@ module.exports = function (name, BaseModel, config) {
                 }});
             });
             it('with a new ' + type + ' value, if supplied', function (done) {
-                xhr.getResponseHeader.withArgs('content-type').returns('text/html');
+                (xhr.rawRequest || xhr).getResponseHeader.withArgs('content-type').returns('text/html');
                 instance.sync('update', instance, {error: function (xhr) {
                     expect(callback.firstCall.args[1]).to.equal(xhrProps.headers[type]);
                     done();
@@ -214,7 +238,7 @@ module.exports = function (name, BaseModel, config) {
             });
             it('and the response data, if supplied', function (done) {
                 instance.sync('update', instance, {error: function (xhr) {
-                    expect(callback.firstCall.args[2]).to.deep.equal(JSON.parse(xhrProps.responseText));
+                    expect(callback.firstCall.args[2]).to.deep.equal(jsonData(xhr));
                     done();
                 }});
             });
